@@ -1,0 +1,13 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Изменение услуги
+{% endblock %}
+
+{% block content %}
+    <form method="post">
+        {% csrf_token %}
+        {% include 'form.html' with form=form %}
+        <button type="submit" class="btn btn-primary">Изменить</button>
+    </form>
+{% endblock %}

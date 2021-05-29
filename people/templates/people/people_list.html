@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+
+{% block title %}Исполнители{% endblock %}
+{% block content %}
+    <center>
+        <a href="/people/add/" class="btn btn-primary" role="button">Добавить</a>
+    </center>
+    <table class="table">
+        <thead>
+            <tr>
+                {% for label in labels %}
+                    <th scope="col">{{ label }}</th>
+                {% endfor %}
+                <th scope="col"></th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for worker in list %}
+                <tr>
+                    <td>{{ worker.name }}</td>
+                    <td>{{ worker.birth }}</td>
+                    <td>{{ worker.address }}</td>
+                    <td>{{ worker.passport_serial }}</td>
+                    <td>{{ worker.passport_date }}</td>
+                    <td>{{ worker.passport_issuer }}</td>
+                    <td>
+                        <a href="/people/edit/{{ worker.pk }}" class="btn btn-primary" role="button">Изменить</a>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger" onclick="delete_worker({{ worker.pk }}, '{{ worker.name }}')">Удалить</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script>
+        const delete_worker = (id, name) => {
+            const result = confirm(`Удалить ${name}`);
+            if (result) {
+                location.href = `/people/delete/${id}`;
+            }
+        };
+    </script>
+{% endblock %}

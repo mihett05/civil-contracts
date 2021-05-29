@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Периоды
+{% endblock %}
+
+{% block content %}
+    <div class="mb-3">
+        <label class="form-label" for="worker_field">Исполнитель</label>
+        <select id="worker_field" class="form-select">
+            {% for worker in workers %}
+                {% if worker.pk == selected %}
+                    <option value="{{ worker.pk }}" selected="selected">{{ worker.name }}</option>
+                {% else %}
+                    <option value="{{ worker.pk }}">{{ worker.name }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </div>
+    {% block periods %}{% endblock %}
+{% endblock %}

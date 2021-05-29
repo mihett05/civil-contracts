@@ -1,0 +1,23 @@
+{% extends 'periods/period_layout.html' %}
+{% load static %}
+
+{% block periods %}
+    {% csrf_token %}
+    <div class="row">
+        <div class="col text-center">
+            <a href="/periods/add/{{ selected }}" class="btn btn-primary" role="button" id="period_add_button">
+                Добавить период
+            </a>
+        </div>
+        <div class="col text-center">
+            <a href="/periods/services/" class="btn btn-primary" role="button">Услуги</a>
+        </div>
+    </div>
+
+
+
+    <br/>
+    <div id="periods">
+    </div>
+    <script src="{% static 'js/periods.js' %}"></script>
+{% endblock %}

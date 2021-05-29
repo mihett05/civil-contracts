@@ -1,0 +1,25 @@
+{% extends 'periods/period_layout.html' %}
+{% load forms %}
+
+{% block title %}Добавить период{% endblock %}
+
+{% block periods %}
+    <form method="post">
+        {% csrf_token %}
+        {% include 'form.html' with form=form %}
+        <button type="submit" class="btn btn-primary">Добавить</button>
+    </form>
+    <script>
+        window.onload = () => {
+            new Litepicker({
+                element: document.querySelector('#{{ form.start.html_name }}_field'),
+                elementEnd: document.querySelector('#{{ form.end.html_name }}_field'),
+                singleMode: false,
+                allowRepick: true,
+            });
+            document.querySelector('#worker_field').addEventListener('change', (event) => {
+                location.href = `/periods/add/${event.target.value}/`;
+            });
+        };
+    </script>
+{% endblock %}

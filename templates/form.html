@@ -1,0 +1,40 @@
+{% load forms %}
+
+{% for field in form %}
+    <div class="mb-3">
+        <label class="form-label" for="{{ field.html_name }}_field">
+            {{ field.label }}
+        </label>
+        {% if field.field.widget.input_type == "checkbox" %}
+            {% for i, choice in field.field.choices %}
+                <div class="form-check">
+                    <input
+                        type="checkbox"
+                        name="{{ field.html_name }}"
+                        class="form-check-input"
+                        id="{{ field.html_name }}_field"
+                        value="{{ i }}"
+                    >
+                    <label class="form-check-label" for="{{ field.html_name }}_field">
+                        {{ choice }}
+                    </label>
+                </div>
+
+            {% endfor %}
+        {% else %}
+            <input
+                name="{{ field.html_name }}"
+                class="form-control {{ field.errors|class_errors }}"
+                value="{{ field.value|default_if_none:'' }}"
+                id="{{ field.html_name }}_field"
+            >
+        {% endif %}
+
+
+        {% if field.errors %}
+            <div id="{{ field.html_name }}_fieldFeedback" class="invalid-feedback">
+                {{ field.errors }}
+            </div>
+        {% endif %}
+    </div>
+{% endfor %}

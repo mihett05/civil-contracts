@@ -1,0 +1,41 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Услуги
+{% endblock %}
+
+{% block content %}
+    <div class="text-center">
+        <a href="/periods/services/add/" class="btn btn-primary" role="button">Добавить</a>
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Название услуги</th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for service in services %}
+                <tr>
+                    <td>{{ service.name }}</td>
+                    <td>
+                        <a href="/periods/services/edit/{{ service.pk }}" class="btn btn-primary" role="button">Изменить</a>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary" onclick="deleteService({{ service.pk }})">Удалить</button>
+                    </td>
+                </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+    <script>
+        const deleteService = (id) => {
+            if (confirm('Удалить услугу?')) {
+                location.href = `/periods/services/delete/${id}`;
+            }
+        }
+    </script>
+{% endblock %}

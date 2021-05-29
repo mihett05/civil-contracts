@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <div class="row">
+        <div class="col text-center">
+            <a href="/people/" class="btn btn-primary">Исполнители</a>
+        </div>
+        <div class="col text-center">
+            <a href="/periods/" class="btn btn-primary">Периоды</a>
+        </div>
+    </div>
+    <br/>
+    <div class="row">
+        <div class="col"></div>
+        <div class="col">
+            <form method="get" action="/select/">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">
+                        Исполнитель, для которого сгенерировать договоры ГПХ
+                    </label>
+                    <select class="form-select" name="worker">
+                        {% for i, choice in form.fields.worker.choices %}
+                            <option value="{{ i }}">{{ choice }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Выбрать</button>
+                </div>
+            </form>
+        </div>
+        <div class="col"></div>
+
+    </div>
+
+{% endblock %}
