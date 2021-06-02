@@ -11,3 +11,6 @@ class Worker(models.Model):
     passport_serial = models.IntegerField()
     passport_date = models.CharField(max_length=10)
     passport_issuer = models.CharField(max_length=256)
+
+    def __str__(self):
+        return f"Worker({self.name})"

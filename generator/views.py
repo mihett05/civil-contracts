@@ -5,22 +5,25 @@ import random
 import string
 import zipfile
 import shutil
+from urllib.parse import quote
 from datetime import date
 
 from docxtpl import DocxTemplate
 from django.shortcuts import render, HttpResponseRedirect, HttpResponse
+from django.views.decorators.http import require_POST
+from django.core.files.storage import FileSystemStorage
 
 from people.models import Worker
 from periods.models import Period, services
 
 from .forms import WorkerSelectForm
-from .utils import group_periods_by_services, unite_contracts
+from .contracts import group_periods_by_services, unite_contracts
+from .excel import load_people
 from .num_to_text import num2text
 
 
 def index(request):
     choices = [(worker.pk, worker.name) for worker in sorted(Worker.objects.all(), key=lambda x: x.name)]
-    print(request.user.pk)
     form = WorkerSelectForm()
     form.fields["worker"].choices = choices
     return render(request, "generator/index.html", {
@@ -28,12 +31,23 @@ def index(request):
     })
 
 
+@require_POST
+def load_people_view(request):
+    if "file" in request.FILES and request.FILES["file"]:
+        file = request.FILES["file"]
+        fs = FileSystemStorage()
+        filename = fs.save("".join(random.sample(string.ascii_lowercase, 16)) + "." + file.name.split(".")[-1], file)
+        load_people(os.path.join("media", filename))
+        fs.delete(filename)
+    return HttpResponseRedirect("/")
+
+
 def select_periods(request):
     if request.method == "POST":
         contracts = list(map(json.loads, request.POST.getlist("contracts")))
         worker = Worker.objects.filter(pk=int(request.GET["worker"])).first()
 
-        dir_name = f"{worker.name}_" + "".join(random.sample(string.ascii_lowercase, 8))
+        dir_name = f"media/{worker.name}_" + "".join(random.sample(string.ascii_lowercase, 8))
         os.mkdir(dir_name)
         files = []
 
@@ -81,7 +95,7 @@ def select_periods(request):
         shutil.rmtree(dir_name)
 
         resp = HttpResponse(stream.getvalue(), "application/x-zip-compressed")
-        resp["Content-Disposition"] = f"attachment; filename={worker.name}.zip"
+        resp["Content-Disposition"] = f"attachment; filename={quote(worker.name)}.zip"
 
         return resp
     else:

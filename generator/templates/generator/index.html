@@ -16,6 +16,7 @@
             <form method="get" action="/select/">
                 {% csrf_token %}
                 <div class="mb-3">
+                    <h1 class="text-center">Сгенерироать договоры</h1>
                     <label class="form-label">
                         Исполнитель, для которого сгенерировать договоры ГПХ
                     </label>
@@ -31,7 +32,34 @@
             </form>
         </div>
         <div class="col"></div>
+    </div>
+    <br/>
+    <br/>
+    <br/>
+    <br/>
+    <div class="text-center">
+        <div class="row">
+            <div class="col"></div>
+            <div class="col">
+                <h1>Загрузить таблицу</h1>
+                <form method="post" enctype="multipart/form-data" action="/load_people/">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="fileSelect" class="form-label">
+                            <b>.xlsx</b> файл таблицы
+                        </label>
+                        <input
+                                class="form-control"
+                                type="file"
+                                id="fileSelect"
+                                name="file"
+                        >
+                        <button class="btn btn-primary">Загрузить</button>
+                    </div>
+                </form>
+            </div>
+            <div class="col"></div>
+        </div>
 
     </div>
-
 {% endblock %}
