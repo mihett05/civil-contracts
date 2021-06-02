@@ -2,8 +2,8 @@ from django.shortcuts import render, HttpResponseRedirect, Http404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
-from .models import Worker, Period, Service
-from .forms import PeriodForm, ServiceForm
+from .models import Worker, Period, services
+from .forms import PeriodForm
 
 
 def periods(request):
@@ -23,16 +23,15 @@ def add_period(request, worker_id):
 
     if request.method == "POST":
         form = PeriodForm(request.POST)
-        form.fill_choices()
         if form.is_valid():
             period = Period(
                 worker=worker,
                 start=form.cleaned_data["start"],
                 end=form.cleaned_data["end"],
-                price=form.cleaned_data["price"]
+                price=form.cleaned_data["price"],
+                service=form.cleaned_data["service"]
             )
             period.save()
-            form.apply_services(period)
 
             return HttpResponseRedirect(f"/periods/?selected={worker.pk}")
         else:
@@ -43,7 +42,6 @@ def add_period(request, worker_id):
             })
     else:
         form = PeriodForm()
-        form.fill_choices()
 
     return render(request, "periods/period_add.html", {
         "workers": workers,
@@ -61,7 +59,7 @@ def get_periods(request, worker_id):
         "start": period.start,
         "end": period.end,
         "price": period.price,
-        "services": [service.pk for service in period.services.all()],
+        "service": period.service,
     } for period in sorted(worker_periods, key=lambda x: x.start)]})
 
 
@@ -74,7 +72,6 @@ def edit_period(request, period_id):
     form = PeriodForm(request.POST, instance=period)
     if form.is_valid():
         form.save()
-        form.apply_services(period)
     return HttpResponseRedirect(f"/periods/?selected={period.worker.pk}")
 
 
@@ -87,56 +84,5 @@ def del_period(request, period_id):
     return HttpResponseRedirect(f"/periods/?selected={period.worker.pk}")
 
 
-def get_services(request):
-    services = Service.objects.all()
-    return render(request, "periods/services.html", {
-        "services": services
-    })
-
-
 def get_services_list(request):
-    services = Service.objects.all()
-    return JsonResponse({service.pk: service.name for service in services})
-
-
-def add_service(request):
-    if request.method == "POST":
-        form = ServiceForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect("/periods/services/")
-    else:
-        form = ServiceForm()
-
-    return render(request, "periods/service_add.html", {
-        "form": form
-    })
-
-
-def edit_service(request, service_id):
-    service = Service.objects.filter(pk=service_id).first()
-
-    if not service:
-        return Http404()
-
-    if request.method == "POST":
-        form = ServiceForm(request.POST, instance=service)
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect("/periods/services/")
-    else:
-        form = ServiceForm(instance=service)
-
-    return render(request, "periods/service_edit.html", {
-        "form": form
-    })
-
-
-def del_service(request, service_id):
-    service = Service.objects.filter(pk=service_id).first()
-
-    if not service:
-        return Http404()
-
-    service.delete()
-    return HttpResponseRedirect("/periods/services/")
+    return JsonResponse({"services": list(services.keys())})

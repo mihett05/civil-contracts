@@ -2,12 +2,15 @@ from django.db import models
 
 from people.models import Worker
 
+from .services import service_tech, service_expert, service_org, service_info
 
-class Service(models.Model):
-    class Meta:
-        ordering = ["name"]
 
-    name = models.TextField()
+services = {
+    "технические": service_tech,
+    "экспертные": service_expert,
+    "организационно-методические": service_org,
+    "информационно-библиографические": service_info
+}
 
 
 class Period(models.Model):
@@ -15,7 +18,13 @@ class Period(models.Model):
     start = models.DateField()
     end = models.DateField()
     price = models.FloatField()
-    services = models.ManyToManyField(Service)
+
+    service_choices = [(service, service) for service in services.keys()]
+    service = models.CharField(
+        max_length=64,
+        choices=service_choices,
+        default="технические"
+    )
 
     def __str__(self):
         return f"{str(self.start)} - {str(self.end)}"

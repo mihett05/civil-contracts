@@ -1,12 +1,5 @@
 class Period extends HTMLElement {
     connectedCallback() {
-        let services = []
-        if (this.getAttribute('services')) {
-            services = this.getAttribute('services').split(',').map((v) => {
-                return parseInt(v, 10);
-            });
-        }
-
         const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
         this.innerHTML = `
             <div class="card">
@@ -57,21 +50,13 @@ class Period extends HTMLElement {
                         </div>
                         <div class="mb-3 row">
                             <label class="form-label">Услуги</label>
-                            ${Object.keys(Period.services).map((v) => `
-                                <div class="form-check">
-                                    <input
-                                        class="form-check-input"
-                                        type="checkbox"
-                                        value="${v}"
-                                        id="service_checkbox_${v}"
-                                        ${services.includes(parseInt(v))? 'checked' : ''}
-                                        name="services"
-                                    >
-                                    <label class="form-check-label" for="service_checkbox_${v}">
-                                        ${Period.services[v]}
-                                    </label>
-                                </div>
-                            `).join('\n')}
+                            <select class="form-select" name="service">
+                                ${Period.services.map((service) => `
+                                    <option value="${service}" ${
+                                        this.getAttribute('service') === service ? 'selected' : ''
+                                    }>${service}</option>
+                                `)}                            
+                            </select>
                         </div>
                         <div class="d-flex flex-row-reverse">
                             <button type="button" class="btn btn-danger ms-1" onclick="deletePeriod(${this.getAttribute('id')})">
@@ -101,7 +86,7 @@ class Period extends HTMLElement {
     static services = {};
 
     static get observedAttributes() {
-        return ['id', 'start', 'end', 'price', 'services'];
+        return ['id', 'start', 'end', 'price', 'service'];
     }
 }
 
@@ -119,7 +104,7 @@ const getPeriods = (workerId) => {
     return fetch('/periods/services/list/')
         .then((response) => response.json())
         .then((data) => {
-            Period.services = data;
+            Period.services = data.services;
         })
         .then(() => {
             return fetch(`/periods/${workerId}/`)
@@ -142,7 +127,6 @@ const getPeriods = (workerId) => {
                                 Period.observedAttributes.forEach(
                                     (key) => el.setAttribute(key, period[key])
                                 );
-                                el.setAttribute('services', period.services.join(','));
                                 col.append(el);
                                 row.append(col);
                             }

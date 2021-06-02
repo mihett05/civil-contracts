@@ -11,7 +11,7 @@ from docxtpl import DocxTemplate
 from django.shortcuts import render, HttpResponseRedirect, HttpResponse
 
 from people.models import Worker
-from periods.models import Period, Service
+from periods.models import Period, services
 
 from .forms import WorkerSelectForm
 from .utils import group_periods_by_services, unite_contracts
@@ -31,7 +31,6 @@ def index(request):
 def select_periods(request):
     if request.method == "POST":
         contracts = list(map(json.loads, request.POST.getlist("contracts")))
-        services = Service.objects.all()
         worker = Worker.objects.filter(pk=int(request.GET["worker"])).first()
 
         dir_name = f"{worker.name}_" + "".join(random.sample(string.ascii_lowercase, 8))
@@ -43,10 +42,8 @@ def select_periods(request):
                           f"проживающ(ая)ый по адресу: {worker.address}, паспорт: {str(worker.passport_serial)[:2]} "\
                     f"{str(worker.passport_serial)[2:4]} №{str(worker.passport_serial)[4:]}, {worker.passport_date},"\
                           f"{worker.passport_issuer}"
-            services_text = "; ".join(map(lambda x: x.name, filter(lambda x: x.pk in contract["services"], services)))
             price_text = num2text(int(contract["price"]), (("рубль", "рубля", "рублей"), "m")).capitalize().split()
             price_num = "{:,}".format(int(contract["price"])).replace(",", " ")
-            print(contract["range"].split("по")[0][1:].strip()[:-2].split("."))
             start = date(*reversed(list(map(int, contract["range"].split("по")[0][1:].strip()[:-2].split(".")))))
             date_text = f"«{start.strftime('%d')}» m {start.year}г.".replace("m", {
                 1: "января",
@@ -66,12 +63,14 @@ def select_periods(request):
             doc = DocxTemplate("templates/template.docx")
             doc.render({
                 "worker": worker_text,
-                "services": services_text,
+                "service_name": contract["service"],
+                "service_list": services[contract["service"]]["list"],
+                "service_paragraph_2": services[contract["service"]]["2"],
                 "range": contract["range"],
                 "price": f"{price_num} ({' '.join(price_text[:-1])}) {price_text[-1]}",
                 "date": date_text
             })
-            file = f"{dir_name}/{contract['range']}_{worker.name}.docx"
+            file = f"{dir_name}/{contract['range']}_{contract['service']}_{worker.name}.docx"
             files.append(file)
             doc.save(file)
 
@@ -87,8 +86,6 @@ def select_periods(request):
         return resp
     else:
         choices = [(worker.pk, worker.name) for worker in sorted(Worker.objects.all(), key=lambda x: x.name)]
-        services = Service.objects.all()
-
         select_form = WorkerSelectForm(request.GET)
         select_form.fields["worker"].choices = choices
 
@@ -101,10 +98,6 @@ def select_periods(request):
 
         for contract in contracts:
             contract["value"] = json.dumps(contract)
-            contract["services"] = [
-                list(filter(lambda x: x.pk == contract["services"][i], services))[0].name
-                for i in range(len(contract["services"]))
-            ]
 
         return render(request, "generator/select.html", {
             "contracts": contracts,

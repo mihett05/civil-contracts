@@ -35,11 +35,9 @@ def group_periods_by_services(periods):
     groups = dict()
 
     for period in periods:
-        services = tuple([service.pk for service in period.services.all()])
-        if services in groups:
-            groups[services].append(period)
-        else:
-            groups[services] = [period]
+        if period.service not in groups:
+            groups[period.service] = []
+        groups[period.service].append(period)
 
     return groups
 
@@ -75,7 +73,7 @@ def unite_contracts(groups):
             contracts.append({
                 "range": f"с {format_date(union.start)}г. по {format_date(union.end)}г.",
                 "price": union.price,
-                "services": group
+                "service": group
             })
 
     return contracts

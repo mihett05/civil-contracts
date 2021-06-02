@@ -19,8 +19,13 @@
                         {{ choice }}
                     </label>
                 </div>
-
             {% endfor %}
+        {% elif field.field.widget.input_type == "select" %}
+            <select class="form-select" name="{{ field.html_name }}" id="{{ field.html_name }}_field">
+                {% for value, choice in field.field.choices %}
+                    <option value="{{ value }}">{{ choice }}</option>
+                {% endfor %}
+            </select>
         {% else %}
             <input
                 name="{{ field.html_name }}"

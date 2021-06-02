@@ -63,13 +63,7 @@
                     Услуги
                 </label>
                 <div class="col-sm-10">
-                    <ul class="list-group">
-                        {% for service in contract.services %}
-                            <li class="list-group-item">{{ service }}</li>
-                        {% endfor %}
-
-
-                    </ul>
+                    <i>{{ contract.service }}</i>
                 </div>
             </div>
         {% endfor %}
