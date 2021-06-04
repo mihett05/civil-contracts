@@ -4,7 +4,8 @@ build:
 release:
   image: web
   command:
-    - sh ./src/entrypoint.sh
+    - python manage.py migrate
+    - python manage.py initadmin
 setup:
   addons:
     - plan: heroku-postgresql
