@@ -4,7 +4,7 @@ build:
 release:
   image: web
   command:
-    sh ./src/entrypoint.sh
+    - sh ./src/entrypoint.sh
 setup:
   addons:
     - plan: heroku-postgresql
