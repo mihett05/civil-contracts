@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'civil_contract.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-if os.environ.get('POSTGRES_USER'):
+if os.environ.get('POSTGRES_USER', False):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -89,7 +89,7 @@ if os.environ.get('POSTGRES_USER'):
             'PORT': ''
         }
     }
-elif os.environ.get('DATABASE_URL'):
+elif os.environ.get('DATABASE_URL', False):
     DATABASES = {
         'default': dj_database_url.config(conn_max_age=500),
     }
