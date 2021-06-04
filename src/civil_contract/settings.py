@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 import os
+import dj_database_url
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -87,6 +88,10 @@ if os.environ.get('POSTGRES_USER'):
             'HOST': 'postgres',
             'PORT': ''
         }
+    }
+elif os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(conn_max_age=500),
     }
 else:
     DATABASES = {
