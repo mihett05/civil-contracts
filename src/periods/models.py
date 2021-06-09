@@ -2,14 +2,15 @@ from django.db import models
 
 from people.models import Worker
 
-from .services import service_tech, service_expert, service_org, service_info
+from .services import service_tech, service_expert, service_org, service_info, service_accountant
 
 
 services = {
     "технические": service_tech,
     "экспертные": service_expert,
     "организационно-методические": service_org,
-    "информационно-библиографические": service_info
+    "информационно-библиографические": service_info,
+    "бухгалтерские": service_accountant,
 }
 
 

@@ -5,21 +5,19 @@ import random
 import string
 import zipfile
 import shutil
-from urllib.parse import quote
-from datetime import date
+from urllib.parse import quote, parse_qs
 
-from docxtpl import DocxTemplate
 from django.shortcuts import render, HttpResponseRedirect, HttpResponse
 from django.views.decorators.http import require_POST
 from django.core.files.storage import FileSystemStorage
 
 from people.models import Worker
-from periods.models import Period, services
+from periods.models import Period
 
 from .forms import WorkerSelectForm
-from .contracts import group_periods_by_services, unite_contracts
+from .contracts import group_periods_by_services, unite_contracts, make_word
 from .excel import load_people
-from .num_to_text import num2text
+
 
 
 def index(request):
@@ -52,46 +50,12 @@ def select_periods(request):
         files = []
 
         for contract in contracts:
-            worker_text = f"{worker.name}, именуем(ая)ый в дальнейшем «Исполнитель», {worker.birth}г. рождения, " \
-                          f"проживающ(ая)ый по адресу: {worker.address}, паспорт: {str(worker.passport_serial)[:2]} "\
-                    f"{str(worker.passport_serial)[2:4]} №{str(worker.passport_serial)[4:]}, {worker.passport_date},"\
-                          f"{worker.passport_issuer}"
-            price_text = num2text(int(contract["price"]), (("рубль", "рубля", "рублей"), "m")).capitalize().split()
-            price_num = "{:,}".format(int(contract["price"])).replace(",", " ")
-            start = date(*reversed(list(map(int, contract["range"].split("по")[0][1:].strip()[:-2].split(".")))))
-            date_text = f"«{start.strftime('%d')}» m {start.year}г.".replace("m", {
-                1: "января",
-                2: "февраля",
-                3: "марта",
-                4: "апреля",
-                5: "мая",
-                6: "июня",
-                7: "июля",
-                8: "августа",
-                9: "сентября",
-                10: "октября",
-                11: "ноября",
-                12: "декабря",
-            }[start.month])
-
-            doc = DocxTemplate("templates/template.docx")
-            doc.render({
-                "worker": worker_text,
-                "service_name": contract["service"],
-                "service_list": services[contract["service"]]["list"],
-                "service_paragraph_2": services[contract["service"]]["2"],
-                "range": contract["range"],
-                "price": f"{price_num} ({' '.join(price_text[:-1])}) {price_text[-1]}",
-                "date": date_text
-            })
-            file = f"{dir_name}/{contract['range']}_{contract['service']}_{worker.name}.docx"
-            files.append(file)
-            doc.save(file)
+            files.append(make_word(contract, worker, dir_name))
 
         stream = io.BytesIO()
         zf = zipfile.ZipFile(stream, "w")
         for file in files:
-            zf.write(file, file[len(dir_name):])
+            zf.write(file, file[len(dir_name):])  # убираю путь папки из названия
         shutil.rmtree(dir_name)
 
         resp = HttpResponse(stream.getvalue(), "application/x-zip-compressed")
@@ -116,4 +80,43 @@ def select_periods(request):
         return render(request, "generator/select.html", {
             "contracts": contracts,
             "worker": worker
+        })
+
+
+def select_people(request):
+    workers = Worker.objects.all()
+
+    if request.method == "POST":
+        data = list(map(lambda x: x.decode("utf-8"), parse_qs(request.body, encoding="utf-8").keys()))
+        data.remove("csrfmiddlewaretoken")
+        data = list(map(int, data))
+        contracts_workers = list(filter(lambda x: x.pk in data, workers))
+
+        dirs = dict()
+
+        for worker in contracts_workers:
+            periods = Period.objects.filter(worker=worker).all()
+            contracts = unite_contracts(group_periods_by_services(periods))
+            dir_name = f"media/{worker.name}_" + "".join(random.sample(string.ascii_lowercase, 8))
+            os.mkdir(dir_name)
+            dirs[dir_name] = []
+            for contract in contracts:
+                dirs[dir_name].append(make_word(contract, worker, dir_name))
+
+        stream = io.BytesIO()
+
+        zf = zipfile.ZipFile(stream, "w")
+        for directory in dirs:
+            for file in dirs[directory]:
+                zf.write(file, file[len(directory):])  # убираю путь папки из названия
+            shutil.rmtree(directory)
+
+        resp = HttpResponse(stream.getvalue(), "application/x-zip-compressed")
+        resp["Content-Disposition"] = f"attachment; filename={quote('Договоры')}.zip"
+
+        return resp
+
+    else:
+        return render(request, "generator/select_people.html", {
+            "workers": workers
         })

@@ -1,0 +1,25 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+    <h3>Каких людей сгенерировать</h3>
+    <form method="post" action="/select_people/">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Сгенерировать</button>
+        <br/>
+        <br/>
+        {% for worker in workers %}
+            <div class="form-check">
+                <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="{{ worker.pk }}"
+                        id="worker__{{ worker.pk }}"
+                        checked
+                >
+                <label class="form-check-label" for="worker__{{ worker.pk }}">
+                    {{ worker.name }}
+                </label>
+            </div>
+        {% endfor %}
+    </form>
+{% endblock %}

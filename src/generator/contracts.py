@@ -1,4 +1,8 @@
-from datetime import timedelta
+from datetime import timedelta, date
+from docxtpl import DocxTemplate
+from .num_to_text import num2text
+
+from periods.models import services
 
 
 class PeriodUnion:
@@ -77,3 +81,42 @@ def unite_contracts(groups):
             })
 
     return contracts
+
+
+def make_word(contract, worker, dir_name):
+    worker_text = f"{worker.name}, именуем(ая)ый в дальнейшем «Исполнитель», {worker.birth}г. рождения, " \
+                  f"проживающ(ая)ый по адресу: {worker.address}, паспорт: {str(worker.passport_serial)[:2]} " \
+                  f"{str(worker.passport_serial)[2:4]} №{str(worker.passport_serial)[4:]}, {worker.passport_date}," \
+                  f"{worker.passport_issuer}"
+    price_text = num2text(int(contract["price"]), (("рубль", "рубля", "рублей"), "m")).capitalize().split()
+    price_num = "{:,}".format(int(contract["price"])).replace(",", " ")
+    start = date(*reversed(list(map(int, contract["range"].split("по")[0][1:].strip()[:-2].split(".")))))
+    date_text = f"«{start.strftime('%d')}» m {start.year}г.".replace("m", {
+        1: "января",
+        2: "февраля",
+        3: "марта",
+        4: "апреля",
+        5: "мая",
+        6: "июня",
+        7: "июля",
+        8: "августа",
+        9: "сентября",
+        10: "октября",
+        11: "ноября",
+        12: "декабря",
+    }[start.month])
+
+    doc = DocxTemplate("templates/template.docx")
+    doc.render({
+        "worker": worker_text,
+        "service_name": contract["service"],
+        "service_list": services[contract["service"]]["list"],
+        "service_paragraph_2": services[contract["service"]]["2"],
+        "range": contract["range"],
+        "price": f"{price_num} ({' '.join(price_text[:-1])}) {price_text[-1]}",
+        "date": date_text
+    })
+    file = f"{dir_name}/{contract['range']}_{contract['service']}_{worker.name}.docx"
+    doc.save(file)
+
+    return file

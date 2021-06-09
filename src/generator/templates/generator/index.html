@@ -10,13 +10,19 @@
         </div>
     </div>
     <br/>
+    <br/>
+    <div class="text-center">
+        <a href="/select_people/" class="btn btn-primary">Выбрать исполнителей</a>
+    </div>
+    <br/>
+    <br/>
     <div class="row">
         <div class="col"></div>
         <div class="col">
             <form method="get" action="/select/">
                 {% csrf_token %}
                 <div class="mb-3">
-                    <h1 class="text-center">Сгенерироать договоры</h1>
+                    <h1 class="text-center">Сгенерировать договоры</h1>
                     <label class="form-label">
                         Исполнитель, для которого сгенерировать договоры ГПХ
                     </label>
